@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
 	import { reduced_motion } from './reduced-motion';
+	import Cell from './Cell.svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data: PageData;
@@ -89,6 +90,20 @@
 			.querySelector(`[data-key="${event.key}" i]`)
 			?.dispatchEvent(new MouseEvent('click', { cancelable: true }));
 	}
+
+	/**
+	 * An array of guess row indexes
+	 * used to create visual guesses list
+	 * @type {Array<number>}
+	 */
+	const rows = Array.from(Array(6).keys());
+
+	/**
+	 * An array of guess column indexes
+	 * used to create visual guesses list
+	 * @type {Array<number>}
+	 */
+	const columns = Array.from(Array(5).keys());
 </script>
 
 <svelte:window on:keydown={keydown} />
@@ -113,33 +128,11 @@
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<div class="grid" class:playing={!won} class:bad-guess={form?.badGuess}>
-		{#each Array.from(Array(6).keys()) as row (row)}
-			{@const current = row === i}
+		{#each rows as row}
 			<h2 class="visually-hidden">Row {row + 1}</h2>
-			<div class="row" class:current>
-				{#each Array.from(Array(5).keys()) as column (column)}
-					{@const guess = current ? currentGuess : data.guesses[row]}
-					{@const answer = data.answers[row]?.[column]}
-					{@const value = guess?.[column] ?? ''}
-					{@const selected = current && column === guess.length}
-					{@const exact = answer === 'x'}
-					{@const close = answer === 'c'}
-					{@const missing = answer === '_'}
-					<div class="letter" class:exact class:close class:missing class:selected>
-						{value}
-						<span class="visually-hidden">
-							{#if exact}
-								(correct)
-							{:else if close}
-								(present)
-							{:else if missing}
-								(absent)
-							{:else}
-								empty
-							{/if}
-						</span>
-						<input name="guess" disabled={!current} type="hidden" {value} />
-					</div>
+			<div class="row" class:current={row === i}>
+				{#each columns as column}
+					<Cell {row} {column} {i} {data} {currentGuess} />
 				{/each}
 			</div>
 		{/each}
@@ -263,41 +256,6 @@
 
 	.grid.playing .row.current {
 		filter: drop-shadow(3px 3px 10px var(--color-bg-0));
-	}
-
-	.letter {
-		aspect-ratio: 1;
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		box-sizing: border-box;
-		text-transform: lowercase;
-		border: none;
-		font-size: calc(0.08 * var(--width));
-		border-radius: 2px;
-		background: white;
-		margin: 0;
-		color: rgba(0, 0, 0, 0.7);
-	}
-
-	.letter.missing {
-		background: rgba(255, 255, 255, 0.5);
-		color: rgba(0, 0, 0, 0.5);
-	}
-
-	.letter.exact {
-		background: var(--color-theme-2);
-		color: white;
-	}
-
-	.letter.close {
-		border: 2px solid var(--color-theme-2);
-	}
-
-	.selected {
-		outline: 2px solid var(--color-theme-1);
 	}
 
 	.controls {
